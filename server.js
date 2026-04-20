@@ -3,6 +3,12 @@ const app = express();
 
 app.use(express.json());
 
+// ✅ ROOT PAGE
+app.get("/", (req, res) => {
+  res.send("🚀 V8 Scraper is running");
+});
+
+// ✅ SCRAPER API
 app.post("/scrape", (req, res) => {
   const { url } = req.body;
 
