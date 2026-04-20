@@ -1,36 +1,33 @@
-app.post("/scrape", async (req, res) => {
+const express = require("express");
+const app = express();
+
+app.use(express.json());
+
+// HEALTH CHECK
+app.get("/", (req, res) => {
+  res.send("🚀 V8 SERVER IS LIVE");
+});
+
+// SAFE SCRAPER (no fetch, no risks)
+app.post("/scrape", (req, res) => {
   const { url } = req.body;
 
   if (!url) {
     return res.json({ success: false, error: "NO_URL" });
   }
 
-  try {
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36"
-      }
-    });
+  return res.json({
+    success: true,
+    title: "TEST PRODUCT (SAFE MODE)",
+    price: "999",
+    image: "https://via.placeholder.com/600",
+    final_url: url
+  });
+});
 
-    const html = await response.text();
+// IMPORTANT PORT FIX
+const PORT = process.env.PORT || 3000;
 
-    const titleMatch = html.match(/<title>(.*?)<\/title>/i);
-    const priceMatch = html.match(/\$ ?([0-9]+\.?[0-9]*)/);
-    const imageMatch = html.match(/property="og:image"\s+content="(.*?)"/i);
-
-    return res.json({
-      success: true,
-      title: titleMatch ? titleMatch[1] : "Unknown Product",
-      price: priceMatch ? priceMatch[1] : "",
-      image: imageMatch ? imageMatch[1] : "https://via.placeholder.com/600",
-      final_url: url
-    });
-
-  } catch (err) {
-    return res.json({
-      success: false,
-      error: err.message
-    });
-  }
+app.listen(PORT, () => {
+  console.log("Server running on port " + PORT);
 });
