@@ -6,9 +6,6 @@ app.post("/scrape", async (req, res) => {
   }
 
   try {
-    // =========================
-    // STEP 1: Fetch HTML
-    // =========================
     const response = await fetch(url, {
       headers: {
         "User-Agent":
@@ -18,40 +15,15 @@ app.post("/scrape", async (req, res) => {
 
     const html = await response.text();
 
-    // =========================
-    // STEP 2: TITLE EXTRACTION
-    // =========================
-    let title =
-      html.match(/<title>(.*?)<\/title>/i)?.[1] ||
-      html.match(/"title"\s*:\s*"([^"]+)"/)?.[1] ||
-      "Unknown Product";
+    const titleMatch = html.match(/<title>(.*?)<\/title>/i);
+    const priceMatch = html.match(/\$ ?([0-9]+\.?[0-9]*)/);
+    const imageMatch = html.match(/property="og:image"\s+content="(.*?)"/i);
 
-    title = title.replace(" - AliExpress", "").trim();
-
-    // =========================
-    // STEP 3: PRICE EXTRACTION
-    // =========================
-    let price =
-      html.match(/\$\s?([0-9]+\.?[0-9]*)/)?.[1] ||
-      html.match(/"price"\s*:\s*"?([0-9]+\.?[0-9]*)"?/)?.[1] ||
-      "";
-
-    // =========================
-    // STEP 4: IMAGE EXTRACTION
-    // =========================
-    let image =
-      html.match(/property="og:image"\s+content="(.*?)"/i)?.[1] ||
-      html.match(/"image"\s*:\s*"([^"]+)"/)?.[1] ||
-      "https://via.placeholder.com/600";
-
-    // =========================
-    // RESPONSE
-    // =========================
     return res.json({
       success: true,
-      title,
-      price,
-      image,
+      title: titleMatch ? titleMatch[1] : "Unknown Product",
+      price: priceMatch ? priceMatch[1] : "",
+      image: imageMatch ? imageMatch[1] : "https://via.placeholder.com/600",
       final_url: url
     });
 
