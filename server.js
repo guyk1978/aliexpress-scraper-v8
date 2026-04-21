@@ -1,33 +1,24 @@
 const express = require("express");
-const app = express();
+const axios = require("axios");
 
+const app = express();
 app.use(express.json());
 
-// =======================
-// CORS FIX
-// =======================
+// CORS
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Content-Type");
   res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-
+  if (req.method === "OPTIONS") return res.sendStatus(200);
   next();
 });
 
-// =======================
-// HEALTH CHECK
-// =======================
+// HEALTH
 app.get("/", (req, res) => {
-  res.send("🚀 V8 SERVER IS LIVE");
+  res.send("🚀 V8 REAL ENGINE LIVE");
 });
 
-// =======================
-// SAFE SCRAPER
-// =======================
+// SCRAPE
 app.post("/scrape", async (req, res) => {
   const { url } = req.body;
 
@@ -36,29 +27,27 @@ app.post("/scrape", async (req, res) => {
   }
 
   try {
-    const response = await fetch(url, {
+    const response = await axios.get(url, {
+      timeout: 20000,
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36"
       }
     });
 
-    const html = await response.text();
+    const html = response.data;
 
     const title =
       html.match(/<title>(.*?)<\/title>/i)?.[1]?.replace(" - AliExpress", "").trim() ||
       "Unknown Product";
 
     const price =
-      html.match(/"price"\s*:\s*"?(.*?)"?[,}]/)?.[1] ||
-      html.match(/\$ ?([0-9]+\.?[0-9]*)/)?.[1] ||
-      "";
+      html.match(/\$ ?([0-9]+\.?[0-9]*)/)?.[1] || "";
 
     const image =
-      html.match(/property="og:image"\s+content="(.*?)"/i)?.[1] ||
-      "";
+      html.match(/property="og:image"\s+content="(.*?)"/i)?.[1] || "";
 
-    return res.json({
+    res.json({
       success: true,
       title,
       price,
@@ -67,18 +56,12 @@ app.post("/scrape", async (req, res) => {
     });
 
   } catch (err) {
-    return res.json({
+    res.json({
       success: false,
-      error: err.message
+      error: "ALIEXPRESS_BLOCKED_OR_TIMEOUT"
     });
   }
 });
 
-// =======================
-// SERVER START
-// =======================
 const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
-});
+app.listen(PORT, () => console.log("Live on " + PORT));
